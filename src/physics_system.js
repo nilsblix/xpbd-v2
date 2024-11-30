@@ -15,7 +15,6 @@ import {
   PrismaticYConstraint,
   PrismaticPosConstraint,
   RevoluteJoint,
-  CollisionConstraint,
 } from "./constraints.js";
 import { RigidBody } from "./rigid_body.js";
 
@@ -130,9 +129,6 @@ export class PhysicsSystem {
       (PhysicsSystem.dt_mult * PhysicsSystem.dt) / PhysicsSystem.sub_steps;
 
     for (let s = 0; s < PhysicsSystem.sub_steps; s++) {
-      let col;
-      if (this.bodies.length >= 2) col = new CollisionConstraint(0, 1);
-
       // forces
       for (let i = 0; i < this.force_generators.length; i++) {
         this.force_generators[i].apply(this.bodies);
@@ -165,8 +161,6 @@ export class PhysicsSystem {
       for (let i = 0; i < this.constraints.length; i++) {
         this.constraints[i].solve(this.bodies);
       }
-
-      if (col) col.solve(this.bodies);
 
       // update velocities
       for (let i = 0; i < this.bodies.length; i++) {

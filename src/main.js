@@ -1,5 +1,3 @@
-console.log("loaded main.js");
-
 import { Units } from "./utils/units.js";
 import { Render } from "./utils/render.js";
 

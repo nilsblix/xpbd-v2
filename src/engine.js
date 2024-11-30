@@ -63,8 +63,13 @@ export function update(canvas) {
         : User.mouse.sim_pos;
     Render.c.fillStyle = Colors.editor_mouse;
     Render.c.strokeStyle = "#000000";
+    Render.c.lineWidth = 1;
+    Render.arc(mouse_pos, Units.mult_c2s * 6, true, true);
+
+    Render.c.fillStyle = "#ffffff";
     Render.c.lineWidth = LineWidths.bodies * Units.mult_s2c;
-    Render.arc(mouse_pos, 0.05, true, true);
+    Render.arc(new Vector2(1, 1), 0.05, true, true)
+
   });
   PhysicsSystem.rdt = render_timer.dt;
 
@@ -102,38 +107,6 @@ function handleEventsOnInput() {
         paused.style.display = "block";
       },
       onkeyup: null,
-    },
-    // {
-    //     key: "ArrowRight",
-    //     onkeydown: (e) => {
-    //         e.preventDefault();
-    //         console.log("one frame");)
-
-    //         PhysicsSystem.dt_mult = PhysicsSystem.sub_steps;
-    //         physics_timer.measure(() => psystem.process());
-    //         PhysicsSystem.pdt = physics_timer.dt;
-    //     },
-    //     onkeyup: (e) => {
-    //         PhysicsSystem.dt_mult = 1;
-
-    //     }
-    // },
-    {
-      key: "ArrowUp",
-      onkeydown: (e) => {
-        e.preventDefault();
-        if (editor.active || PhysicsSystem.simulating) return;
-
-        PhysicsSystem.dt_mult = 1 / PhysicsSystem.sub_steps;
-        PhysicsSystem.simulating = true;
-        document.getElementById("paused").innerHTML = "SLOW MOTION";
-      },
-      onkeyup: (e) => {
-        if (editor.active || !PhysicsSystem.simulating) return;
-        PhysicsSystem.dt_mult = 1;
-        PhysicsSystem.simulating = false;
-        document.getElementById("paused").innerHTML = "*paused";
-      },
     },
     {
       key: "1",

@@ -14,6 +14,10 @@ export class Units {
 
   static NUM_LINES = { x: 40, y: 40 / this.RATIO };
 
+  static pan_offset = Vector2.zero.clone();
+  static zoom = 1;
+  static zoom_factor = 1 / 600;
+
   /**
    * @param {HTMLCanvasElement} canvas
    */
@@ -30,26 +34,40 @@ export class Units {
     this.canvas.width = canvas.width;
     this.canvas.height = canvas.height;
 
-    this.mult_c2s = this.WIDTH / canvas.width;
-    this.mult_s2c = canvas.width / this.WIDTH;
+    this.mult_c2s = this.WIDTH / canvas.width / this.zoom;
+    this.mult_s2c = (canvas.width / this.WIDTH) * this.zoom;
 
     this.DIMS.set(new Vector2(this.WIDTH, this.HEIGHT));
   }
 
-  /**
-   * @param {Vector2} pos
-   * @returns {number}
-   */
-  static c2s_x(pos) {
-    return (this.WIDTH * pos.x) / this.canvas.width;
+  // static adjustZoom(factor) {
+  //   this.zoom *= factor;
+  //   this.mult_c2s = this.WIDTH / this.canvas.width / this.zoom;
+  //   this.mult_s2c = (this.canvas.width / this.WIDTH) * this.zoom;
+  // }
+
+  static adjustZoom(factor, sim_pos) {
+    const prev_zoom = this.zoom;
+    this.zoom *= factor;
+
+    // Update multipliers
+    this.mult_c2s = this.WIDTH / this.canvas.width / this.zoom;
+    this.mult_s2c = (this.canvas.width / this.WIDTH) * this.zoom;
+
+
   }
 
-  /**
-   * @param {Vector2} pos
-   * @returns {number}
-   */
+  static adjustPanOffset(delta) {
+    this.pan_offset = Vector2.add(this.pan_offset, delta);
+  }
+
+
+  static c2s_x(pos) {
+    return (this.WIDTH * pos.x) / this.canvas.width / this.zoom - this.pan_offset.x;
+  }
+
   static c2s_y(pos) {
-    return (this.HEIGHT * (this.canvas.height - pos.y)) / this.canvas.height;
+    return this.HEIGHT - (pos.y / this.zoom) * this.HEIGHT / this.canvas.height - this.pan_offset.y;
   }
 
   /**
@@ -60,20 +78,13 @@ export class Units {
     return new Vector2(this.c2s_x(pos), this.c2s_y(pos));
   }
 
-  /**
-   * @param {Vector2} pos
-   * @returns {number}
-   */
   static s2c_x(pos) {
-    return (this.canvas.width * pos.x) / this.WIDTH;
+    return ((this.canvas.width * (pos.x + this.pan_offset.x)) / this.WIDTH) * this.zoom;
   }
 
-  /**
-   * @param {Vector2} pos
-   * @returns {number}
-   */
   static s2c_y(pos) {
-    return (this.canvas.height * (this.HEIGHT - pos.y)) / this.HEIGHT;
+    return ((this.canvas.height * (this.HEIGHT - (pos.y + this.pan_offset.y))) / this.HEIGHT) * this.zoom;
+    // thisHEIGHT - (a / zoom) * thisHEIGHT / canvHEIGHT - thispanOffsety
   }
 
   /**
