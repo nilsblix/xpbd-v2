@@ -4,6 +4,8 @@ export class Units {
   static WIDTH = 10;
   static RATIO = 16 / 9;
   static HEIGHT = this.WIDTH / this.RATIO;
+  static MIN = new Vector2(undefined, undefined);
+  static MAX = new Vector2(undefined, undefined);
 
   static DIMS = new Vector2(undefined, undefined);
 
@@ -38,23 +40,21 @@ export class Units {
     this.mult_s2c = (canvas.width / this.WIDTH) * this.zoom;
 
     this.DIMS.set(new Vector2(this.WIDTH, this.HEIGHT));
+
+    this.MIN = this.c2s(new Vector2(0, this.canvas.height));
+    this.MAX = this.c2s(new Vector2(this.canvas.width, 0));
   }
 
-  // static adjustZoom(factor) {
-  //   this.zoom *= factor;
-  //   this.mult_c2s = this.WIDTH / this.canvas.width / this.zoom;
-  //   this.mult_s2c = (this.canvas.width / this.WIDTH) * this.zoom;
-  // }
-
-  static adjustZoom(factor, sim_pos) {
-    const prev_zoom = this.zoom;
+  static adjustZoom(factor, sim_pos, canv_pos) {
+    if ((this.zoom > 10 && factor > 1) || (this.zoom < 0.15 && factor < 1)) return;
     this.zoom *= factor;
 
-    // Update multipliers
     this.mult_c2s = this.WIDTH / this.canvas.width / this.zoom;
     this.mult_s2c = (this.canvas.width / this.WIDTH) * this.zoom;
 
-
+    const new_sim_pos = this.c2s(canv_pos);
+    const delta_sim = Vector2.sub(sim_pos, new_sim_pos);
+    this.pan_offset = Vector2.sub(this.pan_offset, delta_sim);
   }
 
   static adjustPanOffset(delta) {

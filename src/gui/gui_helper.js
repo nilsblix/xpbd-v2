@@ -140,12 +140,15 @@ export function updateGUI(canvas, psystem) {
   const popup = document.getElementById("popup-window");
   const top_left_label = document.getElementById("top-left-label");
   const paused = document.getElementById("paused");
+  const bottom_left_info = document.getElementById("bottom-left-info");
   popup.style.right = `${window.innerWidth - rect.right}px`;
   popup.style.bottom = `${window.innerHeight - rect.bottom}px`;
   top_left_label.style.left = `${rect.left}px`;
   top_left_label.style.top = `${rect.top}px`;
   paused.style.right = `${window.innerWidth - rect.right}px`;
   paused.style.top = `${rect.top}px`;
+  bottom_left_info.style.left = `${rect.left}px`;
+  bottom_left_info.style.bottom = `${rect.top}px`;
 
   updateDisplayedDebugs(psystem);
   updateChangedUserData();
@@ -153,6 +156,8 @@ export function updateGUI(canvas, psystem) {
 }
 
 function updateDisplayedDebugs(psystem) {
+  document.getElementById("bottom-left-mouse-position").innerHTML = "[" + User.mouse.sim_pos.x.toFixed(4) + ", " + User.mouse.sim_pos.y.toFixed(4) + "]"
+
   // profiling
   document.getElementById("profiling-dt").innerHTML = (
     PhysicsSystem.dt * 1e3

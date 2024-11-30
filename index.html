@@ -20,6 +20,10 @@
                 src: url("QuinqueFive.ttf") format("truetype");
             }
 
+            html {
+                --layered-text: #bd8c9b;
+            }
+
             body {
                 background-color: rgb(36, 36, 47);
                 overflow: hidden;
@@ -79,6 +83,16 @@
                 margin-bottom: 0.2em;
                 /* border: 1px solid yellow; */
             }
+
+            .bottom-left-info {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                padding: 10px;
+                color: var(--layered-text);
+                font-family: basis33;
+                font-size: 16px;
+            }
         </style>
     </head>
 
@@ -86,6 +100,12 @@
         <canvas id="engine"></canvas>
 
         <div id="top-left-label" class="top-left-label">[q][a][z][w][e]</div>
+
+        <span id="bottom-left-info" class="bottom-left-info">
+            Mouse Position : <span id="bottom-left-mouse-position">[0, 0]</span> sim space3
+            <br>
+            // Nils Blix
+        </span>
 
         <div id="paused">*paused</div>
         <script>
@@ -348,6 +368,12 @@
                     <div class="c-label-2g">[spacebar]</div>
                     <div class="c-label-2">Reset Scene</div>
                     <div class="c-label-2g">[R] *capital</div>
+                    <div class="c-label-2">Pan around</div>
+                    <div class="c-label-2g">Drag + [Left Mouse]</div>
+                    <div class="c-label-2">Zoom</div>
+                    <div class="c-label-2g">Scroll up/down</div>
+                    <div class="c-label-2">Mouse Spring</div>
+                    <div class="c-label-2g">Press and hold [v] over body</div>
 
                     <div class="c-primary-header">Toggle Windows:</div>
                     <div class="c-label-2">Constants settings</div>

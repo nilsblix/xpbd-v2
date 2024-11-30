@@ -2,6 +2,7 @@ import { Vector2 } from "./utils/math.js";
 import { Render } from "./utils/render.js";
 import { Units } from "./utils/units.js";
 
+import { User } from "./user.js";
 import {
   Gravity,
   EnergyDamping,
@@ -9,7 +10,6 @@ import {
   SpringJoint,
 } from "./force_generators.js";
 
-import { User } from "./user.js";
 import {
   OffsetLinkConstraint,
   PrismaticYConstraint,
@@ -22,7 +22,6 @@ export class PhysicsSystem {
   static EPS = 1e-8;
 
   static sub_steps = 10;
-  static dt_mult = 1;
   static dt = 1 / 120;
   static pdt = -1;
   static rdt = -1;
@@ -39,6 +38,7 @@ export class PhysicsSystem {
 
   // static objects
   static mouse_spring = new MouseSpring();
+  static ACTIVATE_MOUSE_SPRING = false;
 
   constructor() {
     this.bodies = [];
@@ -103,7 +103,7 @@ export class PhysicsSystem {
   }
 
   handleMouseSpring() {
-    if (User.mouse.left_down && !PhysicsSystem.mouse_spring.active) {
+    if (PhysicsSystem.ACTIVATE_MOUSE_SPRING && !PhysicsSystem.mouse_spring.active) {
       for (let i = 0; i < this.bodies.length; i++) {
         if (PhysicsSystem.mouse_spring.bodyIsValid(this.bodies[i], i)) {
           PhysicsSystem.mouse_spring.active = true;
@@ -111,7 +111,7 @@ export class PhysicsSystem {
       }
     }
 
-    if (!User.mouse.left_down && PhysicsSystem.mouse_spring.active) {
+    if (!PhysicsSystem.ACTIVATE_MOUSE_SPRING && PhysicsSystem.mouse_spring.active) {
       PhysicsSystem.mouse_spring.active = false;
     }
 
@@ -126,7 +126,7 @@ export class PhysicsSystem {
     if (!PhysicsSystem.simulating) return;
 
     const sub_dt =
-      (PhysicsSystem.dt_mult * PhysicsSystem.dt) / PhysicsSystem.sub_steps;
+      PhysicsSystem.dt / PhysicsSystem.sub_steps;
 
     for (let s = 0; s < PhysicsSystem.sub_steps; s++) {
       // forces

@@ -35,8 +35,8 @@ html {
     column-gap: 20px;
     flex-direction: column;
 
-    background-color: #15171fb8;
-    border: 2px solid white;
+    background-color: #101118ee;
+    border: 0.5px solid white;
 
     user-select: none;
 }
@@ -65,9 +65,15 @@ html {
     height: 30px;
     grid-row: 1;
     grid-column: 1 / -1;
-    background-color: #3d85e1 !important;
-    border: 3px solid var(--active_background_blue);
+    /* background-color: #3d85e1 !important; */
+    background-color: var(--active_background_blue) !important;
     cursor: grab;
+
+    transition: background-color 0.1s;
+}
+
+.c-header:hover {
+    background-color: var(--active_blue) !important;
 }
 
 .c-window *:not(.c-grid) {
@@ -183,8 +189,8 @@ html {
 
 .c-slider::-webkit-slider-thumb {
     appearance: none;
-    width: 8px;
-    height: 20px;
+    width: 10px;
+    height: 14px;
     background-color: var(--active_blue) !important;
 }
 
@@ -203,9 +209,9 @@ html {
     width: 22px;
     height: 22px;
 
-    background-color: var(--inactive_background_blue) !important;
+    background-color: var(--inactive_background_blue);
     border: 1px solid white !important;
-    border-radius: 50%;
+    border-radius: 10%;
 
     cursor: pointer;
 }

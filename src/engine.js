@@ -30,6 +30,7 @@ export function start(canvas) {
   psystem = new PhysicsSystem();
   handleEventsOnInput();
   initGUIWindows(psystem);
+  User.init();
   User.initMouseEventListeners(canvas);
 }
 
@@ -66,9 +67,9 @@ export function update(canvas) {
     Render.c.lineWidth = 1;
     Render.arc(mouse_pos, Units.mult_c2s * 6, true, true);
 
-    Render.c.fillStyle = "#ffffff";
-    Render.c.lineWidth = LineWidths.bodies * Units.mult_s2c;
-    Render.arc(new Vector2(1, 1), 0.05, true, true)
+    Render.c.lineWidth = Math.max(0.5, 0.01 * Units.mult_s2c);
+    Render.c.strokeStyle = Colors.debug.green;
+    Render.rect(Vector2.zero.clone(), Units.DIMS, true, false);
 
   });
   PhysicsSystem.rdt = render_timer.dt;
@@ -389,6 +390,16 @@ function handleEventsOnInput() {
         console.log("'" + psystem.toJSON() + "'");
       },
       onkeyup: null,
+    },
+    {
+      key: "v",
+      onkeydown: (e) => {
+        if (editor.active) return;
+        PhysicsSystem.ACTIVATE_MOUSE_SPRING = true;
+      },
+      onkeyup: (e) => {
+        PhysicsSystem.ACTIVATE_MOUSE_SPRING = false;
+      },
     },
   ]);
 }

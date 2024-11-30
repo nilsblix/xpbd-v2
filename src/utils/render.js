@@ -4,15 +4,35 @@ import { Units } from "./units.js";
 export class Render {
   static c;
   static TAU = 2 * Math.PI;
-  static background = {
-    background: "#0c0e11",
-    really_big_line_color: "#1c1d21",
-    really_big_line_sim_thickness: 0.008,
-    big_line_color: "#19191f",
-    big_line_sim_thickness: 0.005,
-    small_line_color: "#141417",
-    small_line_sim_thickness: 0.005,
-  };
+
+  static bg = {
+    // colors: {
+    //   background: "#0c0e11",
+    //   line1: "#1c1d21",
+    //   line2: "#19191f",
+    //   line3: "#141417",
+    //   line4: "#100f12",
+    // },
+    colors: {
+      background: "#0c0e11",
+      line1: "#1c1d21",
+      line2: "#151719",
+      line3: "#111215",
+      line4: "#0e1013",
+    },
+    dist: {
+      line1: 1,
+      line2: 0.25,
+      line3: 0.125,
+      line4: 0.0625,
+    },
+    widths: {
+      line1: 0.009,
+      line2: 0.007,
+      line3: 0.004,
+      line4: 0.002,
+    }
+  }
 
   /**
    * Initializes the interface. All of the rendering is not called here. Some may be done outside but since c is a reference it doesn't matter
@@ -103,58 +123,45 @@ export class Render {
   }
 
   static renderBackground() {
-    Render.c.fillStyle = Render.background.background;
-    Render.rect(Vector2.zero, Units.DIMS, false, true);
+    Render.c.fillStyle = this.bg.colors.background;
+    Render.c.fillRect(0, 0, Units.canvas.width, Units.canvas.height);
 
-    Render.c.strokeStyle = Render.background.small_line_color;
-    Render.c.lineWidth =
-      Units.mult_s2c * Render.background.small_line_sim_thickness;
-
-    for (let i = 0; i < Units.NUM_LINES.x; i++) {
-      const clip = i / Units.NUM_LINES.x;
-      const delta = 0.5 / Units.NUM_LINES.x;
-      const x = Units.WIDTH * (clip + delta);
-      Render.line(new Vector2(x, 0), new Vector2(x, Units.HEIGHT));
+    Render.c.strokeStyle = this.bg.colors.line4;
+    Render.c.lineWidth = this.bg.widths.line4 * Units.mult_s2c;
+    for (let x = Math.floor(Units.MIN.x); x < Units.MAX.x; x += this.bg.dist.line4) {
+      this.line(new Vector2(x, Units.MIN.y), new Vector2(x, Units.MAX.y));
+    }
+    for (let y = Math.floor(Units.MIN.y); y < Units.MAX.y; y += this.bg.dist.line4) {
+      this.line(new Vector2(Units.MIN.x, y), new Vector2(Units.MAX.x, y));
     }
 
-    for (let i = 0; i < Units.NUM_LINES.y; i++) {
-      const clip = i / Units.NUM_LINES.y;
-      const delta = 0.5 / Units.NUM_LINES.y;
-      const y = Units.HEIGHT * (clip + delta);
-      Render.line(new Vector2(0, y), new Vector2(Units.WIDTH, y));
+    Render.c.strokeStyle = this.bg.colors.line3;
+    Render.c.lineWidth = this.bg.widths.line3 * Units.mult_s2c;
+    for (let x = Math.floor(Units.MIN.x); x < Units.MAX.x; x += this.bg.dist.line3) {
+      this.line(new Vector2(x, Units.MIN.y), new Vector2(x, Units.MAX.y));
+    }
+    for (let y = Math.floor(Units.MIN.y); y < Units.MAX.y; y += this.bg.dist.line3) {
+      this.line(new Vector2(Units.MIN.x, y), new Vector2(Units.MAX.x, y));
     }
 
-    Render.c.strokeStyle = Render.background.big_line_color;
-    Render.c.lineWidth =
-      Units.mult_s2c * Render.background.big_line_sim_thickness;
-
-    for (let i = 0; i < Units.NUM_LINES.x; i++) {
-      const clip = i / Units.NUM_LINES.x;
-      const x = Units.WIDTH * clip;
-      Render.line(new Vector2(x, 0), new Vector2(x, Units.HEIGHT));
+    Render.c.strokeStyle = this.bg.colors.line2;
+    Render.c.lineWidth = this.bg.widths.line2 * Units.mult_s2c;
+    for (let x = Math.floor(Units.MIN.x); x < Units.MAX.x; x += this.bg.dist.line2) {
+      this.line(new Vector2(x, Units.MIN.y), new Vector2(x, Units.MAX.y));
+    }
+    for (let y = Math.floor(Units.MIN.y); y < Units.MAX.y; y += this.bg.dist.line2) {
+      this.line(new Vector2(Units.MIN.x, y), new Vector2(Units.MAX.x, y));
     }
 
-    for (let i = 0; i < Units.NUM_LINES.y; i++) {
-      const clip = i / Units.NUM_LINES.y;
-      const y = Units.HEIGHT * clip;
-      Render.line(new Vector2(0, y), new Vector2(Units.WIDTH, y));
+    Render.c.strokeStyle = this.bg.colors.line1;
+    Render.c.lineWidth = this.bg.widths.line1 * Units.mult_s2c;
+    for (let x = Math.floor(Units.MIN.x); x < Units.MAX.x; x += this.bg.dist.line1) {
+      this.line(new Vector2(x, Units.MIN.y), new Vector2(x, Units.MAX.y));
+    }
+    for (let y = Math.floor(Units.MIN.y); y < Units.MAX.y; y += this.bg.dist.line1) {
+      this.line(new Vector2(Units.MIN.x, y), new Vector2(Units.MAX.x, y));
     }
 
-    Render.c.strokeStyle = Render.background.really_big_line_color;
-    Render.c.lineWidth =
-      Units.mult_s2c * Render.background.really_big_line_color;
-
-    for (let i = 0; i < Units.NUM_LINES.x; i += 2) {
-      const clip = i / Units.NUM_LINES.x;
-      const x = Units.WIDTH * clip;
-      Render.line(new Vector2(x, 0), new Vector2(x, Units.HEIGHT));
-    }
-
-    for (let i = 0; i < Units.NUM_LINES.y; i += 2) {
-      const clip = i / Units.NUM_LINES.y;
-      const y = Units.HEIGHT * clip;
-      Render.line(new Vector2(0, y), new Vector2(Units.WIDTH, y));
-    }
   }
 
   static HSV_RGB(h, s, v) {

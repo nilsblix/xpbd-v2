@@ -9,6 +9,12 @@ export class User {
     grid_sim_pos: Vector2.zero.clone(),
   };
 
+  static init() {
+    User.mouse.sim_pos = Vector2.scale(1 / 2, Units.DIMS);
+    User.mouse.sim_pos = Units.snap_to_grid(User.mouse.sim_pos);
+    User.mouse.canv_pos = Units.s2c(User.mouse.sim_pos);
+  }
+
   /**
    * Specify which key, then specify what type of event, then the method it does
    * @params array An array of objects like this
@@ -52,9 +58,6 @@ export class User {
       User.mouse.sim_pos.set(Units.c2s(User.mouse.canv_pos));
       User.mouse.grid_sim_pos.set(Units.snap_to_grid(User.mouse.sim_pos));
 
-      // console.log(prev_canv_pos.toString());
-      // console.log(User.mouse.sim_pos.toString());
-
       if (User.mouse.left_down) {
         const delta_canv = Vector2.sub(User.mouse.canv_pos, prev_canv_pos);
         const delta_sim = Vector2.scale(
@@ -79,8 +82,7 @@ export class User {
 
     canvas.addEventListener("wheel", (e) => {
       const factor = Math.exp(- e.deltaY * Units.zoom_factor);
-      console.log(factor);
-      Units.adjustZoom(factor, User.mouse.sim_pos);
+      Units.adjustZoom(factor, User.mouse.sim_pos, User.mouse.canv_pos);
     });
   }
 }

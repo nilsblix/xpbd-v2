@@ -21,6 +21,11 @@ export const Colors = {
     "#9b46f0",
     "#eb63b9",
   ],
+
+  debug: {
+    green: "#00ff00",
+  }
+
 };
 
 /**
