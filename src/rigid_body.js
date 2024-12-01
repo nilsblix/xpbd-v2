@@ -95,7 +95,35 @@ export class RigidBody {
     }
   }
 
-  render() {
+  render(debug) {
+    if (debug) {
+      switch (this.geometry.type) {
+        case "disc":
+          Render.c.fillStyle = Colors.debug.dark_green + "99";
+          Render.c.strokeStyle = Colors.debug.green;
+          Render.c.lineWidth = Units.mult_s2c * LineWidths.bodies;
+          Render.arc(this.pos, this.geometry.radius, true, true);
+
+          const end = this.localToWorld(Vector2.scale(this.geometry.radius, Vector2.right.clone().rotateByAngle(this.theta)));
+          Render.line(this.pos, end);
+          break;
+        case "rect":
+          this.geometry.world_vertices = [];
+          for (let i = 0; i < this.geometry.local_vertices.length; i++) {
+            this.geometry.world_vertices.push(
+              this.localToWorld(this.geometry.local_vertices[i]),
+            );
+          }
+
+          Render.c.fillStyle = Colors.debug.dark_green + "99";
+          Render.c.strokeStyle = Colors.debug.green;
+          Render.c.lineWidth = Units.mult_s2c * LineWidths.bodies;
+          Render.polygon(this.geometry.world_vertices, true, true);
+          break;
+      }
+      return;
+    }
+
     if (this.geometry.type == "disc") {
       Render.c.fillStyle = this.color;
       Render.c.strokeStyle = Colors.body_outlines;
@@ -148,32 +176,121 @@ export class RigidBody {
   }
 
   /**
-   *
-   * @param {Vector2} dir Doesn't have to be of unit-length
-   * @returns {Vector2} The point with hightst dot product with dir
-   */
-  supportPoint(dir) {
-    let best = Vector2.zero.clone();
-    let best_dist = Number.NEGATIVE_INFINITY;
+  *
+  * @param {RigidBody} body Only usable if this.type == disc
+  * @param {Vector2} dir
+  * @returns {{v1: Vector2, v2: Vector2}} The edge that with the largest dot product with its normal and dir
+  */
+  getEdgeWithHighestDot(body, dir) {
+    const edges = this.getEdges(body);
+    let best_edge = {v1: Vector2.zero.clone(), v2: Vector2.zero.clone()};
+    let max_dot = Number.NEGATIVE_INFINITY;
+    for (let i = 0; i < edges.length; i++) {
+      const getNormal = (body, edge) => {
+        const v = Vector2.sub(edge.v2, edge.v1).normalized();
+        const normal = new Vector2(-v.x, v.y);
+        if (normal.dot(Vector2.sub(body.pos, edge.v1)))
+          normal.negate();
+        return normal;
+      }
 
-    const d = dir.normalized();
+      const normal = getNormal(this, edges[i]);
+      const dot = normal.dot(dir)
+      if (dot > max_dot) {
+        max_dot = dot;
+        best_edge = edges[i];
+      }
+    }
+
+    return best_edge;
+
+  }
+
+  /**
+  *
+  * @param {Vector2} pos
+  * @returns {Vector2} The vertex (or disc position) that is closest to input position
+  */
+  getClosestVertex(pos) {
     switch (this.geometry.type) {
       case "disc":
-        return Vector2.add(this.pos, Vector2.scale(this.geometry.radius, d));
+        const n = Vector2.sub(pos, this.pos).normalized();
+        return Vector2.add(this.pos, Vector2.scale(this.geometry.radius, n));
       case "rect":
-        for (let i = 0; i < this.geometry.world_vertices.length; i++) {
-          const rotated_local = Vector2.sub(
-            this.geometry.world_vertices[i],
-            this.pos,
-          );
-          const dist = d.dot(rotated_local);
-          if (dist > best_dist) {
-            best_dist = dist;
-            best.set(this.geometry.world_vertices[i]);
+        const verts = this.geometry.world_vertices;
+        let min_dist = Number.POSITIVE_INFINITY;
+        let best_pos = Vector2.zero.clone();
+        for (let i = 0; i < verts.length; i++) {
+          const dist2 = Vector2.sqr_distance(pos, verts[i]);
+          if (dist2 < min_dist) {
+            min_dist = dist2;
+            best_pos = verts[i];
           }
         }
-        return best;
+        return best_pos;
     }
+  }
+
+  /**
+  * The body input is only useful is this rigidbody is a disc as the SAT edges is dependant on the other position
+  * A disc has unlimited edges so it is useful to not have an infinitely large array
+  * @param {RigidBody} body2
+  * @returns {[{v1: Vector2, v2: Vector2}]} Object ==> {v1: Vector2, v2: Vector2}
+  */
+  getEdges(body2) {
+    const edges = [];
+    switch (this.geometry.type) {
+      case "disc":
+        const q1 = this.getClosestVertex(body2.pos);
+        const q2 = body2.getClosestVertex(this.pos);
+        edges.push({ v1: q1, v2: q2 });
+        break;
+      case "rect":
+        const verts = this.geometry.world_vertices;
+        for (let i = 0; i < verts.length; i++) {
+          const a1 = verts[i];
+          const a2 = i == verts.length - 1 ? verts[0] : verts[i + 1];
+          edges.push({ v1: a1, v2: a2 });
+        }
+        break;
+    }
+    return edges;
+  }
+
+  /**
+  *
+  * @param {Vector2} dir Normalized Vector2
+  * @returns {{low: Vector2, high: Vector2}} The lowest and highest projected values along this direction
+  */
+  projectAlongDir(dir) {
+    let low = Number.POSITIVE_INFINITY;
+    let high = Number.NEGATIVE_INFINITY;
+    switch(this.geometry.type) {
+      case "disc":
+        const dot = this.pos.dot(dir);
+        const proj1 = dot - this.geometry.radius;
+        const proj2 = dot + this.geometry.radius;
+        if (proj1 < low)
+          low = proj1;
+        if (proj1 > high)
+          high = proj1;
+
+        if (proj2 < low)
+          low = proj2;
+        if (proj2 > high)
+          high = proj2;
+        break;
+      case "rect":
+        const verts = this.geometry.world_vertices;
+        for (let i = 0; i < verts.length; i++) {
+          const proj = verts[i].dot(dir);
+          if (proj < low)
+            low = proj;
+          if (proj > high)
+            high = proj;
+        }
+    }
+    return { low: low, high: high };
   }
 
   /**

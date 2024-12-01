@@ -15,6 +15,7 @@ import {
   PrismaticYConstraint,
   PrismaticPosConstraint,
   RevoluteJoint,
+  CollisionConstraint
 } from "./constraints.js";
 import { RigidBody } from "./rigid_body.js";
 
@@ -137,6 +138,11 @@ export class PhysicsSystem {
       if (PhysicsSystem.mouse_spring.active)
         PhysicsSystem.mouse_spring.apply(this.bodies);
 
+      // TEMPORARY
+      let coll = false;
+      if (this.bodies.length >= 2)
+        coll = new CollisionConstraint(0, 1);
+
       // integrate
       for (let i = 0; i < this.bodies.length; i++) {
         const a = this.bodies[i];
@@ -162,6 +168,10 @@ export class PhysicsSystem {
         this.constraints[i].solve(this.bodies);
       }
 
+      // TEMPORARY
+      if (coll)
+        coll.solve(this.bodies);
+
       // update velocities
       for (let i = 0; i < this.bodies.length; i++) {
         const a = this.bodies[i];
@@ -174,7 +184,7 @@ export class PhysicsSystem {
 
   render() {
     for (let i = 0; i < this.bodies.length; i++) {
-      this.bodies[i].render(false);
+      this.bodies[i].render(true);
     }
 
     for (let i = 0; i < this.constraints.length; i++) {

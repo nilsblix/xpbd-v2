@@ -7,6 +7,7 @@ import {
 import { Units } from "./utils/units.js";
 import { Vector2 } from "./utils/math.js";
 import { PhysicsSystem } from "./physics_system.js";
+import { RigidBody } from "./rigid_body.js";
 
 /*
     All constraints must have these methods:
@@ -581,4 +582,154 @@ export class RevoluteJoint {
     joint.C = data.C;
     return joint;
   }
+}
+
+export class CollisionConstraint {
+  constructor(id1, id2) {
+    this.alpha = 0.0;
+
+    this.id1 = id1;
+    this.id2 = id2;
+
+    this.lambda_n = 0; // normal
+    this.lambda_t = 0; // tangent
+    this.n = Vector2.zero.clone();
+    this.C = 0;
+  }
+
+  solve(bodies) {
+    const b1 = bodies[this.id1];
+    const b2 = bodies[this.id2];
+    const contacts = this.getCollisionManifolds(b1, b2);
+
+    for (let i = 0; i < contacts.length; i++) {
+      const cp = contacts[i];
+      Render.c.fillStyle = "#ff0000";
+      Render.arc(cp, 0.08, false, true);
+    }
+
+  }
+
+  /**
+  *
+  * @param {RigidBody} b1
+  * @param {RigidBody} b2
+  * @returns {[Vector2]} If the point is false, then it is not a valid contact manifold
+  */
+  getCollisionManifolds(b1, b2) {
+    const { reference_id, reference_edge, collides, collision_normal, collision_penetration } = this.SAT(b1, b2);
+    if (!collides) return false;
+
+    const incident_edge = reference_id == 1
+      ? b2.getEdgeWithHighestDot(b1, collision_normal)
+      : b1.getEdgeWithHighestDot(b1, collision_normal);
+
+    const getNormal = (origin, vec) => {
+      const normal = new Vector2(-vec.x, vec.y);
+      if (normal.dot(origin))
+        normal.negate();
+      return normal;
+    }
+
+    const A1 = reference_edge.v1;
+    const A2 = reference_edge.v2;
+    const B1 = incident_edge.v1;
+    const B2 = incident_edge.v2;
+    const N1 = getNormal(Vector2.sub(A1, A2), collision_normal);
+    const N2 = getNormal(Vector2.sub(A2, A1), collision_normal);
+
+    const delta_Bx = B2.x - B1.x;
+    const delta_By = B2.y - B1.y;
+    const den = (N1.x * delta_Bx + N1.y * delta_By);
+    const t1 = (N1.x * (A1.x - B1.x) + N1.y * (A1.y - B1.y)) / den;
+    const t2 = (N2.x * (A2.x - B1.x) + N2.y * (A2.y - B1.y)) / den;
+
+    console.log("t1", t1);
+    console.log("t2", t2);
+
+    const inrange = (t) => {
+      return t >= 0.0 && t <= 1.0;
+    }
+
+    const nB1 = Vector2.add(B1, Vector2.scale(t1, Vector2.sub(B2, B1)));
+    const nB2 = Vector2.add(B1, Vector2.scale(t2, Vector2.sub(B2, B1)));
+
+    const res = [];
+
+    if (inrange(t1) && Vector2.sub(nB1, A1).dot(collision_normal) > 0.0)
+      res.push(nB1);
+    if (inrange(t2) && Vector2.sub(nB2, A2).dot(collision_normal) > 0.0)
+      res.push(nB2);
+
+    return res;
+  }
+
+  /**
+  *
+  * @param {RigidBody} b1
+  * @param {RigidBody} b2
+  * @returns {{reference_id: number, reference_edge: {v1: Vector2, v2: Vector2}, collides: boolean, collision_normal: Vector2, collision_penetration: number}}
+  */
+  SAT(b1, b2) {
+    const e1 = b1.getEdges(b2);
+    const e2 = b2.getEdges(b1);
+
+    let collides = false;
+    let collision_penetration = null;
+    let collision_normal = Vector2.zero.clone();
+    let reference_edge = { v1: Vector2.zero.clone(), v2: Vector2.zero.clone() };
+
+    const getNormal = (body, edge) => {
+      const v = Vector2.sub(edge.v2, edge.v1).normalized();
+      const normal = new Vector2(-v.x, v.y);
+      if (normal.dot(Vector2.sub(body.pos, edge.v1)))
+        normal.negate();
+
+      Render.c.fillStyle = "#ff00ff";
+      Render.arc(normal, 0.08, false, true);
+      return normal;
+    }
+
+    const collisionHelper = (body, edges) => {
+      let debug = "";
+      for (let i = 0; i < edges.length; i++) {
+        const normal = getNormal(body, edges[i]);
+        const proj1 = b1.projectAlongDir(normal);
+        const proj2 = b2.projectAlongDir(normal);
+
+        console.log("proj 1");
+        console.dir(proj1);
+
+        console.log("proj 2");
+        console.dir(proj2);
+
+        debug +=
+          "1 " + proj1.low.toFixed(3) + " " + proj1.high.toFixed(3) + " | " + "2 " + proj2.low.toFixed(3) + " " + proj2.high.toFixed(3);
+
+        const penetration = Math.min(
+          Math.abs(proj1.low - proj2.high),
+          Math.abs(proj1.high - proj2.low)
+        );
+
+        if (penetration < collision_penetration || !collision_penetration) {
+          collision_penetration = penetration;
+          collision_normal = normal;
+          reference_edge = edges[i];
+        }
+
+        if (proj1.high > proj2.low && proj2.high > proj1.low) {
+          collides = true;
+          return;
+        }
+      }
+      document.getElementById("custom-easy-debug").innerHTML = debug;
+    }
+
+    collisionHelper(b1, e1);
+    if (collides) return { reference_id: 1, reference_edge, collides, collision_penetration, collision_normal };
+    collisionHelper(b2, e2);
+    return { reference_id: 2, reference_edge, collides, collision_penetration, collision_normal };
+
+  }
+
 }

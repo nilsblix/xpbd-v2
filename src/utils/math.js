@@ -178,7 +178,7 @@ export class Vector2 {
   }
 
   /**
-   * Returns the negated version of this vector
+   * Returns the negated version of this vector. This has been changed
    * @returns {number}
    */
   negate() {

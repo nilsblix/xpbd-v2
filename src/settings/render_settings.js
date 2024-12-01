@@ -24,6 +24,7 @@ export const Colors = {
 
   debug: {
     green: "#00ff00",
+    dark_green: "#416938",
   }
 
 };
