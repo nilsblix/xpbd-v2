@@ -54,12 +54,18 @@ export class RigidBody {
     } else if (geometry.type == "rect") {
       this.I = (1 / 12) * mass * (geometry.width ** 2 + geometry.height ** 2);
 
+      // this.geometry.local_vertices = [
+      //   new Vector2(-geometry.width / 2, -geometry.height / 2),
+      //   new Vector2(-geometry.width / 2, geometry.height / 2),
+      //   new Vector2(geometry.width / 2, geometry.height / 2),
+      //   new Vector2(geometry.width / 2, -geometry.height / 2),
+      // ];
       this.geometry.local_vertices = [
         new Vector2(-geometry.width / 2, -geometry.height / 2),
+        new Vector2( geometry.width / 2, -geometry.height / 2),
+        new Vector2( geometry.width / 2,  geometry.height / 2),
         new Vector2(-geometry.width / 2, geometry.height / 2),
-        new Vector2(geometry.width / 2, geometry.height / 2),
-        new Vector2(geometry.width / 2, -geometry.height / 2),
-      ];
+      ]
     }
   }
 
@@ -87,7 +93,7 @@ export class RigidBody {
           const dir = Vector2.sub(a2, a1);
           const dir_T = new Vector2(-dir.y, dir.x);
           const dot = dir_T.dot(Vector2.sub(point, a1));
-          if (dot > 0.0) return false;
+          if (dot < 0.0) return false;
         }
 
         return true;
@@ -189,7 +195,7 @@ export class RigidBody {
       const getNormal = (body, edge) => {
         const v = Vector2.sub(edge.v2, edge.v1).normalized();
         const normal = new Vector2(-v.x, v.y);
-        if (normal.dot(Vector2.sub(body.pos, edge.v1)))
+        if (normal.dot(Vector2.sub(body.pos, edge.v1)) < 0.0)
           normal.negate();
         return normal;
       }
@@ -214,8 +220,9 @@ export class RigidBody {
   getClosestVertex(pos) {
     switch (this.geometry.type) {
       case "disc":
-        const n = Vector2.sub(pos, this.pos).normalized();
-        return Vector2.add(this.pos, Vector2.scale(this.geometry.radius, n));
+        // const n = Vector2.sub(pos, this.pos).normalized();
+        // return Vector2.add(this.pos, Vector2.scale(this.geometry.radius, n));
+        return this.pos;
       case "rect":
         const verts = this.geometry.world_vertices;
         let min_dist = Number.POSITIVE_INFINITY;
@@ -241,8 +248,12 @@ export class RigidBody {
     const edges = [];
     switch (this.geometry.type) {
       case "disc":
-        const q1 = this.getClosestVertex(body2.pos);
-        const q2 = body2.getClosestVertex(this.pos);
+        const p1 = body2.getClosestVertex(this.pos);
+        const v = Vector2.sub(p1, this.pos).normalized();
+        const p_prime = Vector2.add(this.pos, Vector2.scale(this.geometry.radius, v));
+        const tang = Vector2.scale(1E-8, new Vector2(v.y, -v.x));
+        const q1 = Vector2.add(p_prime, tang);
+        const q2 = Vector2.sub(p_prime, tang);
         edges.push({ v1: q1, v2: q2 });
         break;
       case "rect":
@@ -272,11 +283,6 @@ export class RigidBody {
         const proj2 = dot + this.geometry.radius;
         if (proj1 < low)
           low = proj1;
-        if (proj1 > high)
-          high = proj1;
-
-        if (proj2 < low)
-          low = proj2;
         if (proj2 > high)
           high = proj2;
         break;
@@ -289,6 +295,7 @@ export class RigidBody {
           if (proj > high)
             high = proj;
         }
+        break;
     }
     return { low: low, high: high };
   }
